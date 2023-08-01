@@ -1,4 +1,5 @@
 from .base import *
+from datetime import timedelta
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -19,3 +20,9 @@ DATABASES = {
 
 # Email Config
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=2),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=3),
+}
