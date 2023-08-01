@@ -40,7 +40,7 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = ["corsheaders", "rest_framework", "rest_framework_simplejwt"]
 
-CUSTOM_APPS = ['apps.accounts']    
+CUSTOM_APPS = ["apps.accounts", "apps.election"]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + CUSTOM_APPS
 
