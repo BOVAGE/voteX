@@ -4,13 +4,15 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as Jw
 from rest_framework.exceptions import APIException
 from .models import CustomUser, Student, Guest
 
+print(get_user_model())
 class APIException400(APIException):
     status_code = 400
 
 
 
 class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
-    username_field = get_user_model().USERNAME_FIELD
+    # username_field = get_user_model().USERNAME_FIELD
+    pass
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -47,7 +49,8 @@ class UserSerializer(serializers.ModelSerializer):
         phone_number = validated_data['phone_number']
         user_type = validated_data.get('user_type')
         matric_no = validated_data.get('matric_no')
-        user = CustomUser.objects.create(email=email, phone_number=phone_number, username=username, user_type=user_type)
+        password = validated_data.get("password")
+        user = CustomUser.objects.create_user(email=email, phone_number=phone_number, username=username, user_type=user_type, password=password)
         if user_type=='student':
             student_obj = Student.objects.create(user=user, matric_no=matric_no)
         else:

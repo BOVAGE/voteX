@@ -57,7 +57,7 @@ MIDDLEWARE = [
 
 #User account
 AUTH_USER_MODEL = 'accounts.CustomUser'
-AUTHENTICATION_BACKENDS = ['accounts.auth_backends.EmailBackend']
+# AUTHENTICATION_BACKENDS = ['accounts.auth_backends.EmailBackend'] not needed.
 
 
 ROOT_URLCONF = "config.urls"
