@@ -129,19 +129,146 @@ class BallotQuestionView(generics.ListCreateAPIView):
         }
         return Response(data, status=status.HTTP_200_OK)
 
-# TODO:
-# class OptionView(generics.ListCreateAPIView):
-#     """
-#     view to create options for a ballot question
-#     """
 
-#     serializer_class = ElectionFullDetailSerializer
+class BallotQuestionRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    views to retrieve, update and delete ballot question
+    created by the authenticated user
+    """
 
-#     def get_queryset(self):
-#         return Election.objects.filter(created_by=self.request.user)
+    serializer_class = BallotQuestionSerializer
+    permission_classes = [IsOwnerOrReadOnly]
+    lookup_field = "id"
+    lookup_url_kwarg = "question_id"
+
+    def get_queryset(self):
+        return BallotQuestion.objects.filter(election__created_by=self.request.user)
+
+    def retrieve(self, request, *args, **kwargs):
+        data = super().retrieve(request, *args, **kwargs).data
+        data = {
+            "status": "success",
+            "message": f"Ballot question - {data.get('title')} retrieved successfully",
+            "data": data,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    def update(self, request, *args, **kwargs):
+        data = super().update(request, *args, **kwargs).data
+        data = {
+            "status": "success",
+            "message": f"Ballot question - {data.get('id')} updated successfully",
+            "data": data,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    def destroy(self, request, *args, **kwargs):
+        data = super().destroy(request, *args, **kwargs).data
+        data = {
+            "status": "success",
+            "message": f"Ballot question deleted successfully",
+            "data": data,
+        }
+        return Response(data, status=status.HTTP_204_NO_CONTENT)
+
+
+class OptionListCreateView(generics.ListCreateAPIView):
+    """
+    view to create options for a ballot question
+    """
+
+    serializer_class = OptionSerializer
+
+    def get_queryset(self):
+        election = get_object_or_404(
+            Election,
+            id=self.kwargs.get("election_id"),
+            created_by=self.request.user,
+        )
+        ballot_question = get_object_or_404(
+            election.ballot_questions, id=self.kwargs.get("question_id")
+        )
+        return ballot_question.options.all()
+
+    def perform_create(self, serializer):
+        election = get_object_or_404(
+            Election,
+            id=self.kwargs.get("election_id"),
+            created_by=self.request.user,
+        )
+        ballot_question = get_object_or_404(
+            election.ballot_questions, id=self.kwargs.get("question_id")
+        )
+        serializer.save(ballot_question=ballot_question)
+
+    def list(self, request, *args, **kwargs):
+        data = super().list(request, *args, **kwargs).data
+        data = {
+            "status": "success",
+            "message": "All Options for this ballot question fetched successfully",
+            "data": data,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    def create(self, request, *args, **kwargs):
+        data = super().create(request, *args, **kwargs).data
+        data = {
+            "status": "success",
+            "message": f"Option - {data.get('title')} created successfully",
+            "data": data,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class OptionRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    views to retrieve, update and delete option
+    created by the authenticated user
+    """
+
+    serializer_class = OptionSerializer
+    permission_classes = [IsOwnerOrReadOnly]
+    lookup_field = "id"
+    lookup_url_kwarg = "option_id"
+
+    def get_queryset(self):
+        return Option.objects.filter(
+            ballot_question__election__created_by=self.request.user
+        )
+
+    def retrieve(self, request, *args, **kwargs):
+        data = super().retrieve(request, *args, **kwargs).data
+        data = {
+            "status": "success",
+            "message": f"Option - {data.get('title')} retrieved successfully",
+            "data": data,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    def update(self, request, *args, **kwargs):
+        data = super().update(request, *args, **kwargs).data
+        data = {
+            "status": "success",
+            "message": f"Option - {data.get('id')} updated successfully",
+            "data": data,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    def destroy(self, request, *args, **kwargs):
+        data = super().destroy(request, *args, **kwargs).data
+        data = {
+            "status": "success",
+            "message": f"Option deleted successfully",
+            "data": data,
+        }
+        return Response(data, status=status.HTTP_204_NO_CONTENT)
 
 
 ElectionListCreateView = ElectionListCreateView.as_view()
 ElectionRetrieveUpdateDeleteView = ElectionRetrieveUpdateDeleteView.as_view()
 BallotQuestionView = BallotQuestionView.as_view()
-# OptionView = OptionView.as_view()
+BallotQuestionRetrieveUpdateDeleteView = (
+    BallotQuestionRetrieveUpdateDeleteView.as_view()
+)
+OptionListCreateView = OptionListCreateView.as_view()
+OptionRetrieveUpdateDeleteView = OptionRetrieveUpdateDeleteView.as_view()

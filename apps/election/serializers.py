@@ -4,7 +4,7 @@ from .models import Election, Option, BallotQuestion
 
 class OptionSerializer(serializers.ModelSerializer):
     class Meta:
-        models = Option
+        model = Option
         fields = [
             "id",
             "ballot_question",
@@ -14,6 +14,7 @@ class OptionSerializer(serializers.ModelSerializer):
             "image",
             "created_at",
         ]
+        read_only_fields = ["ballot_question"]
 
 
 class BallotQuestionSerializer(serializers.ModelSerializer):

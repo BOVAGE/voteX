@@ -2,7 +2,9 @@ from django.urls import path
 from .views import (
     ElectionListCreateView,
     BallotQuestionView,
-    # OptionView,
+    BallotQuestionRetrieveUpdateDeleteView,
+    OptionListCreateView,
+    OptionRetrieveUpdateDeleteView,
     ElectionRetrieveUpdateDeleteView,
 )
 
@@ -18,9 +20,19 @@ urlpatterns = [
         BallotQuestionView,
         name="list_create_ballot_question",
     ),
-    # path(
-    #     "<uuid:election_id>/Questions/<uuid:question_id>/Options",
-    #     OptionView,
-    #     name="list_create_option",
-    # ),
+    path(
+        "questions/<uuid:question_id>",
+        BallotQuestionRetrieveUpdateDeleteView,
+        name="retrieve_update_destroy_question",
+    ),
+    path(
+        "<uuid:election_id>/questions/<uuid:question_id>/options",
+        OptionListCreateView,
+        name="list_create_option",
+    ),
+    path(
+        "options/<uuid:option_id>",
+        OptionRetrieveUpdateDeleteView,
+        name="retrieve_update_destroy_election",
+    ),
 ]
