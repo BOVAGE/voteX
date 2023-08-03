@@ -71,7 +71,7 @@ class ElectionSettingCategory(models.Model):
         null=False,
         blank=False,
     )
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
 
     class Meta:
         verbose_name_plural = "Election Setting Categories"
