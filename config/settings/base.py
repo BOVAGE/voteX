@@ -38,9 +38,9 @@ DJANGO_APPS = [
     "django.contrib.staticfiles",
 ]
 
-THIRD_PARTY_APPS = ["corsheaders", "rest_framework"]
+THIRD_PARTY_APPS = ["corsheaders", "rest_framework", "rest_framework_simplejwt"]
 
-CUSTOM_APPS = []    
+CUSTOM_APPS = ["apps.accounts", "apps.election"]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + CUSTOM_APPS
 
@@ -54,6 +54,11 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+# User account
+AUTH_USER_MODEL = "accounts.CustomUser"
+# AUTHENTICATION_BACKENDS = ['accounts.auth_backends.EmailBackend'] not needed.
+
 
 ROOT_URLCONF = "config.urls"
 
@@ -137,4 +142,13 @@ LOGGING = {
         "config": {"handlers": ["console-simple"], "level": "INFO", "propagate": False},
         "apps": {"handlers": ["console-detail"], "level": "INFO", "propagate": False},
     },
+}
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication"
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
 }
