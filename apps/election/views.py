@@ -57,7 +57,7 @@ class ElectionRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = "election_id"
 
     def get_queryset(self):
-        return Election.objects.filter(created_by=self.request.user)
+        return Election.objects.all()
 
     def retrieve(self, request, *args, **kwargs):
         data = super().retrieve(request, *args, **kwargs).data
@@ -94,21 +94,16 @@ class BallotQuestionView(generics.ListCreateAPIView):
     """
 
     serializer_class = BallotQuestionSerializer
+    permission_classes = [IsOwnerOrReadOnly]
 
     def get_queryset(self):
-        election = get_object_or_404(
-            Election,
-            id=self.kwargs.get("election_id"),
-            created_by=self.request.user,
-        )
-        return election.ballot_questions.all()
+        election = get_object_or_404(Election, id=self.kwargs.get("election_id"))
+        self.check_object_permissions(self.request, election)
+        return BallotQuestion.objects.all()
 
     def perform_create(self, serializer):
-        election = get_object_or_404(
-            Election,
-            id=self.kwargs.get("election_id"),
-            created_by=self.request.user,
-        )
+        election = get_object_or_404(Election, id=self.kwargs.get("election_id"))
+        self.check_object_permissions(self.request, election)
         serializer.save(election=election)
 
     def list(self, request, *args, **kwargs):
@@ -142,7 +137,7 @@ class BallotQuestionRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIVi
     lookup_url_kwarg = "question_id"
 
     def get_queryset(self):
-        return BallotQuestion.objects.filter(election__created_by=self.request.user)
+        return BallotQuestion.objects.all()
 
     def retrieve(self, request, *args, **kwargs):
         data = super().retrieve(request, *args, **kwargs).data
@@ -178,27 +173,19 @@ class OptionListCreateView(generics.ListCreateAPIView):
     """
 
     serializer_class = OptionSerializer
+    permission_classes = [IsOwnerOrReadOnly]
 
     def get_queryset(self):
-        election = get_object_or_404(
-            Election,
-            id=self.kwargs.get("election_id"),
-            created_by=self.request.user,
-        )
-        ballot_question = get_object_or_404(
-            election.ballot_questions, id=self.kwargs.get("question_id")
-        )
-        return ballot_question.options.all()
+        election = get_object_or_404(Election, id=self.kwargs.get("election_id"))
+        self.check_object_permissions(self.request, election)
+        return Option.objects.all()
 
     def perform_create(self, serializer):
-        election = get_object_or_404(
-            Election,
-            id=self.kwargs.get("election_id"),
-            created_by=self.request.user,
-        )
+        election = get_object_or_404(Election, id=self.kwargs.get("election_id"))
         ballot_question = get_object_or_404(
             election.ballot_questions, id=self.kwargs.get("question_id")
         )
+        self.check_object_permissions(self.request, ballot_question)
         serializer.save(ballot_question=ballot_question)
 
     def list(self, request, *args, **kwargs):
@@ -232,9 +219,7 @@ class OptionRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = "option_id"
 
     def get_queryset(self):
-        return Option.objects.filter(
-            ballot_question__election__created_by=self.request.user
-        )
+        return Option.objects.all()
 
     def retrieve(self, request, *args, **kwargs):
         data = super().retrieve(request, *args, **kwargs).data
