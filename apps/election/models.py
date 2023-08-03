@@ -43,6 +43,9 @@ class Election(models.Model):
         choices=StatusChoices.choices, default=StatusChoices.BUILDING, max_length=50
     )
 
+    def __str__(self):
+        return self.title
+
 
 class ElectionSetting(models.Model):
     id = models.UUIDField(
@@ -55,6 +58,9 @@ class ElectionSetting(models.Model):
     )
     election = models.OneToOneField(Election, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"{self.election.title} setting"
+
 
 class ElectionSettingCategory(models.Model):
     id = models.UUIDField(
@@ -66,6 +72,12 @@ class ElectionSettingCategory(models.Model):
         blank=False,
     )
     name = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name_plural = "Election Setting Categories"
+
+    def __str__(self):
+        return self.name
 
 
 class ElectionSettingParameter(models.Model):
@@ -84,6 +96,9 @@ class ElectionSettingParameter(models.Model):
     )
     title = models.CharField(max_length=50)
     value = models.CharField(max_length=100)
+
+    def __str__(self) -> str:
+        return f"{self.title} - {self.value}"
 
 
 class BallotQuestion(models.Model):
@@ -106,6 +121,16 @@ class BallotQuestion(models.Model):
     validation_choice_max = models.PositiveSmallIntegerField(default=1)
     validation_choice_min = models.PositiveSmallIntegerField(default=1)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["election", "title"], name="unique_elective_post"
+            ),
+        ]
+
+    def __str__(self):
+        return self.title
+
 
 class Option(models.Model):
     id = models.UUIDField(
@@ -124,3 +149,13 @@ class Option(models.Model):
     description = models.TextField()
     image = models.ImageField(upload_to="elections/", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["ballot_question", "title"], name="unique_option"
+            ),
+        ]
+
+    def __str__(self):
+        return self.title
