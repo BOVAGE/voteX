@@ -9,6 +9,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from apps.common.permissions import IsOwnerOrReadOnly
 from django.shortcuts import get_object_or_404
+from apps.common.tasks import send_email_task
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class VoterListCreateView(generics.ListCreateAPIView):
@@ -26,7 +30,13 @@ class VoterListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         election = get_object_or_404(Election, id=self.kwargs.get("election_id"))
         self.check_object_permissions(self.request, election)
-        serializer.save(election=election)
+        data = serializer.save(election=election)
+        logger.info(f"Sending verification mail to voter with email: {data.email}")
+        send_email_task.delay(
+            "voting/verify_voter.html",
+            {"election_title": election.title, "link": "testing.com"},
+            data.email,
+        )
 
     def list(self, request, *args, **kwargs):
         data = super().list(request, *args, **kwargs).data
@@ -84,7 +94,7 @@ class VoterRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
         data = super().retrieve(request, *args, **kwargs).data
         data = {
             "status": "success",
-            "message": f"Voter - {data.get('title')} retrieved successfully",
+            "message": f"Voter - {data.get('id')} retrieved successfully",
             "data": data,
         }
         return Response(data, status=status.HTTP_200_OK)
