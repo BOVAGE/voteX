@@ -12,6 +12,12 @@ from django.shortcuts import get_object_or_404
 from apps.common.tasks import send_email_task
 import logging
 
+from .tokens import VoterTokenGenerator
+from django.urls import reverse_lazy
+from django.utils.encoding import smart_bytes, smart_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from rest_framework.exceptions import AuthenticationFailed, NotFound
+
 logger = logging.getLogger(__name__)
 
 
@@ -31,12 +37,20 @@ class VoterListCreateView(generics.ListCreateAPIView):
         election = get_object_or_404(Election, id=self.kwargs.get("election_id"))
         self.check_object_permissions(self.request, election)
         data = serializer.save(election=election)
+        uidb64 = urlsafe_base64_encode(smart_bytes(data.id))
+        logger.info(f"The uidb64 is {uidb64}")
+        token = VoterTokenGenerator().make_token(data)
+        verify_link = self.request.build_absolute_uri(
+            reverse_lazy("apps.voting:verify_voter", args=(uidb64,))
+        )
+        verify_link += f"?token={token}"
         logger.info(f"Sending verification mail to voter with email: {data.email}")
         send_email_task.delay(
             "voting/verify_voter.html",
-            {"election_title": election.title, "link": "testing.com"},
+            {"election_title": election.title, "link": verify_link},
             data.email,
         )
+        logger.info(f"The verification is {verify_link}")
 
     def list(self, request, *args, **kwargs):
         data = super().list(request, *args, **kwargs).data
@@ -118,6 +132,33 @@ class VoterRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
         return Response(data, status=status.HTTP_204_NO_CONTENT)
 
 
+class VoterVerificationView(generics.GenericAPIView):
+    serializer_class = VoterSerializer
+    permission_classes = []
+    authentication_classes = []
+
+    def get(self, request, voter_id):
+        token = request.query_params.get("token")
+        try:
+            id = str(smart_str(urlsafe_base64_decode(voter_id)))
+            voter = Voter.objects.get(id=id)
+        except ValueError:
+            raise AuthenticationFailed("This token is invalid")
+        except Voter.DoesNotExist:
+            raise NotFound("Voter does not exist")
+        if not VoterTokenGenerator().check_token(voter, token):
+            raise AuthenticationFailed("This token is invalid")
+        voter.is_verified = True
+        voter.save()
+        data = {
+            "status": "success",
+            "message": f"voter verified successfully",
+            "data": None,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+
 VoterListCreateView = VoterListCreateView.as_view()
 VoterRetrieveUpdateDeleteView = VoterRetrieveUpdateDeleteView.as_view()
 VoterBatchCreateView = VoterBatchCreateView.as_view()
+VoterVerificationView = VoterVerificationView.as_view()

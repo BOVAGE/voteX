@@ -3,8 +3,10 @@ from .views import (
     VoterListCreateView,
     VoterRetrieveUpdateDeleteView,
     VoterBatchCreateView,
+    VoterVerificationView,
 )
 
+app_name = "apps.voting"
 urlpatterns = [
     path(
         "<uuid:election_id>/voters",
@@ -20,5 +22,10 @@ urlpatterns = [
         "voters/<uuid:voter_id>",
         VoterRetrieveUpdateDeleteView,
         name="retrieve_update_destroy_question",
+    ),
+    path(
+        "voters/verify/<str:voter_id>",
+        VoterVerificationView,
+        name="verify_voter",
     ),
 ]
