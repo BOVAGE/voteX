@@ -3,7 +3,6 @@ from django.db.models import Q
 from apps.election.models import Election
 from phonenumber_field.modelfields import PhoneNumberField
 import uuid
-from . import utils
 
 
 class Voter(models.Model):
@@ -34,9 +33,3 @@ class Voter(models.Model):
                 name="unique_voter_phone_number",
             ),
         ]
-
-    def save(self, *args, **kwargs):
-        # generate pass_name & pass_key
-        self.pass_key = utils.generate_password()
-        self.pass_name = utils.generate_unique_pass_name(self)
-        super().save(*args, **kwargs)
