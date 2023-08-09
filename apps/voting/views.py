@@ -1,8 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework import generics
-from .serializers import (
-    VoterSerializer,
-)
+from .serializers import VoterSerializer, VoterLoginSerializer
 from .models import Voter
 from apps.election.models import Election
 from rest_framework.response import Response
@@ -158,7 +156,27 @@ class VoterVerificationView(generics.GenericAPIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
+class VoterLoginView(generics.GenericAPIView):
+    serializer_class = VoterLoginSerializer
+    permission_classes = []
+    authentication_classes = []
+
+    def post(self, request, election_id):
+        serializer = self.serializer_class(
+            data=request.data, context={"election_id": election_id}
+        )
+        serializer.is_valid(raise_exception=True)
+        data = serializer.save()
+        data = {
+            "status": "success",
+            "message": f"Voter's credentials are valid",
+            "data": data,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+
 VoterListCreateView = VoterListCreateView.as_view()
 VoterRetrieveUpdateDeleteView = VoterRetrieveUpdateDeleteView.as_view()
 VoterBatchCreateView = VoterBatchCreateView.as_view()
 VoterVerificationView = VoterVerificationView.as_view()
+VoterLoginView = VoterLoginView.as_view()
