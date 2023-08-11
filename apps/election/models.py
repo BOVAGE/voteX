@@ -46,6 +46,15 @@ class Election(models.Model):
     def __str__(self):
         return self.title
 
+    @property
+    def election_result(self):
+        result = {}
+        all_ballot_question_for_election = self.ballot_questions.all()
+        for ballot_question in all_ballot_question_for_election:
+            result[str(ballot_question.title)] = ballot_question.votes_analysis
+        print(result)
+        return result
+
 
 class ElectionSetting(models.Model):
     id = models.UUIDField(
@@ -131,6 +140,15 @@ class BallotQuestion(models.Model):
     def __str__(self):
         return self.title
 
+    @property
+    def votes_analysis(self):
+        analysis = {}
+        all_options_for_question = self.options.all().order_by("voters")
+        for option in all_options_for_question:
+            analysis[str(option.title)] = option.votes_count
+        print(analysis)
+        return analysis
+
 
 class Option(models.Model):
     from apps.voting.models import Voter
@@ -175,3 +193,7 @@ class Option(models.Model):
         if voter_option_choices_count >= ballot_question.validation_choice_max:
             return False
         return True
+
+    @property
+    def votes_count(self):
+        return self.voters.count()
