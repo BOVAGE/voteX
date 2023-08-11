@@ -6,6 +6,8 @@ from django.conf import settings
 from apps.election.models import Election, BallotQuestion, Option
 from django.utils import timezone
 from rest_framework.exceptions import NotFound
+from django.utils import timezone, timesince
+import datetime
 
 
 class VoterSerializer(serializers.ModelSerializer):
@@ -37,7 +39,13 @@ class VoterLoginSerializer(serializers.ModelSerializer):
     def save(self):
         pass_name = self.validated_data["pass_name"]
         token = jwt.encode(
-            {"pass_name": pass_name}, settings.VOTER_JWT_SECRET_KEY, algorithm="HS256"
+            {
+                "pass_name": pass_name,
+                "exp": timezone.now()
+                + datetime.timedelta(seconds=settings.VOTER_JWT_EXPIRY_IN_SECS),
+            },
+            settings.VOTER_JWT_SECRET_KEY,
+            algorithm="HS256",
         )
         return {"access_token": token}
 
@@ -93,9 +101,7 @@ class VoteSerializer(serializers.Serializer):
         voter = self.context.get("request").user
         can_vote = Option.can_vote(voter, ballot_question)
         if not can_vote:
-            raise serializers.ValidationError(
-                f"Already voted"
-            )
+            raise serializers.ValidationError(f"Already voted")
         return attrs
 
     def create(self, validated_data):

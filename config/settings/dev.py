@@ -32,3 +32,5 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=2),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=3),
 }
+
+VOTER_JWT_EXPIRY_IN_SECS = 24 * 60 * 60
