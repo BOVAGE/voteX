@@ -133,6 +133,7 @@ class BallotQuestion(models.Model):
 
 
 class Option(models.Model):
+    from apps.voting.models import Voter
     id = models.UUIDField(
         editable=False,
         db_index=True,
@@ -149,6 +150,7 @@ class Option(models.Model):
     description = models.TextField()
     image = models.ImageField(upload_to="elections/", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    voters = models.ManyToManyField(Voter, related_name="voted_options", blank=True)
 
     class Meta:
         constraints = [

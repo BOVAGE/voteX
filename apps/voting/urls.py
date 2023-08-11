@@ -5,6 +5,7 @@ from .views import (
     VoterBatchCreateView,
     VoterVerificationView,
     VoterLoginView,
+    VotingView,
 )
 
 app_name = "apps.voting"
@@ -18,6 +19,11 @@ urlpatterns = [
         "<uuid:election_id>/voters/login",
         VoterLoginView,
         name="voter_login",
+    ),
+    path(
+        "<uuid:election_id>/votes",
+        VotingView,
+        name="voter_vote",
     ),
     path(
         "<uuid:election_id>/bulk-voters",

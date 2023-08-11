@@ -1,10 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework import generics
-from .serializers import VoterSerializer, VoterLoginSerializer
+from .serializers import VoterSerializer, VoterLoginSerializer, VoteSerializer
 from .models import Voter
 from apps.election.models import Election
 from rest_framework.response import Response
 from rest_framework import status
+from .permissions import IsVoter
 from apps.common.permissions import IsOwnerOrReadOnly
 from django.shortcuts import get_object_or_404
 from apps.common.tasks import send_email_task
@@ -15,6 +16,7 @@ from django.urls import reverse_lazy
 from django.utils.encoding import smart_bytes, smart_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework.exceptions import AuthenticationFailed, NotFound
+from .authentication import VoterJWTAuthentication
 
 logger = logging.getLogger(__name__)
 
@@ -175,8 +177,28 @@ class VoterLoginView(generics.GenericAPIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
+class VotingView(generics.GenericAPIView):
+    serializer_class = VoteSerializer
+    permission_classes = [IsVoter]
+    authentication_classes = [VoterJWTAuthentication]
+
+    def post(self, request, election_id):
+        serializer = self.serializer_class(
+            data=request.data, context={"election_id": election_id}, many=True
+        )
+        serializer.is_valid(raise_exception=True)
+        data = serializer.save(voter=request.user)
+        data = {
+            "status": "success",
+            "message": f"Voting process completed successfully",
+            "data": data,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+
 VoterListCreateView = VoterListCreateView.as_view()
 VoterRetrieveUpdateDeleteView = VoterRetrieveUpdateDeleteView.as_view()
 VoterBatchCreateView = VoterBatchCreateView.as_view()
 VoterVerificationView = VoterVerificationView.as_view()
 VoterLoginView = VoterLoginView.as_view()
+VotingView = VotingView.as_view()
