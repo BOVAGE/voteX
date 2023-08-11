@@ -9,6 +9,8 @@ from .permissions import IsVoter
 from apps.common.permissions import IsOwnerOrReadOnly
 from django.shortcuts import get_object_or_404
 from apps.common.tasks import send_email_task
+from . import utils
+from django.contrib.auth.hashers import make_password
 import logging
 
 from .tokens import VoterTokenGenerator
@@ -149,10 +151,22 @@ class VoterVerificationView(generics.GenericAPIView):
         if not VoterTokenGenerator().check_token(voter, token):
             raise AuthenticationFailed("This token is invalid")
         voter.is_verified = True
+        raw_password = utils.generate_password()
+        print(f"{raw_password=}")
+        voter.pass_key = make_password(raw_password)
         voter.save()
+        send_email_task.delay(
+            "voting/voter_cred.html",
+            {
+                "election_title": voter.election.title,
+                "pass_name": voter.pass_name,
+                "pass_key": raw_password,
+            },
+            voter.email,
+        )
         data = {
             "status": "success",
-            "message": f"voter verified successfully",
+            "message": f"voter verified and credentials has been sent to your email successfully",
             "data": None,
         }
         return Response(data, status=status.HTTP_200_OK)
