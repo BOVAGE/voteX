@@ -90,6 +90,12 @@ class VoteSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 f"You cannot vote for more than {ballot_question.validation_choice_max} or less than {ballot_question.validation_choice_min}"
             )
+        voter = self.context.get("request").user
+        can_vote = Option.can_vote(voter, ballot_question)
+        if not can_vote:
+            raise serializers.ValidationError(
+                f"Already voted"
+            )
         return attrs
 
     def create(self, validated_data):

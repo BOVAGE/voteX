@@ -134,6 +134,7 @@ class BallotQuestion(models.Model):
 
 class Option(models.Model):
     from apps.voting.models import Voter
+
     id = models.UUIDField(
         editable=False,
         db_index=True,
@@ -161,3 +162,16 @@ class Option(models.Model):
 
     def __str__(self):
         return self.title
+
+    @staticmethod
+    def can_vote(voter, ballot_question):
+        ballot_question.refresh_from_db()
+        voter_option_choices = Option.objects.filter(
+            ballot_question=ballot_question, voters=voter
+        )
+        if not voter_option_choices.exists():
+            return True
+        voter_option_choices_count = voter_option_choices.count()
+        if voter_option_choices_count >= ballot_question.validation_choice_max:
+            return False
+        return True

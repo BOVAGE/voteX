@@ -184,7 +184,9 @@ class VotingView(generics.GenericAPIView):
 
     def post(self, request, election_id):
         serializer = self.serializer_class(
-            data=request.data, context={"election_id": election_id}, many=True
+            data=request.data,
+            context={"election_id": election_id, "request": request},
+            many=True,
         )
         serializer.is_valid(raise_exception=True)
         data = serializer.save(voter=request.user)
