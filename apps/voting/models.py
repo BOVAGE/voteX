@@ -16,7 +16,9 @@ class Voter(models.Model):
     )
     email = models.EmailField()
     phone_number = PhoneNumberField()
-    election = models.ForeignKey(Election, on_delete=models.CASCADE)
+    election = models.ForeignKey(
+        Election, on_delete=models.CASCADE, related_name="voters"
+    )
     pass_name = models.CharField(max_length=100, blank=True)
     pass_key = models.CharField(max_length=100, blank=True)
     is_verified = models.BooleanField(default=False)

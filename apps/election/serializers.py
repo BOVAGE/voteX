@@ -75,6 +75,11 @@ class ElectionResultSerializer(serializers.ModelSerializer):
         fields = [
             "title",
             "election_result",
+            "election_result_percentage",
+            "election_result_degree",
+            "no_of_eligible_voters",
+            "no_of_all_voters",
+            "no_of_all_voters_that_have_voted",
         ]
         read_only_fields = ["created_by"]
 

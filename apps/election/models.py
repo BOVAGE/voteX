@@ -55,6 +55,64 @@ class Election(models.Model):
         print(result)
         return result
 
+    @property
+    def election_result_percentage(self):
+        result = {}
+        all_ballot_question_for_election = self.ballot_questions.all()
+        for ballot_question in all_ballot_question_for_election:
+            result[
+                str(ballot_question.title)
+            ] = ballot_question.votes_analysis_in_percentage
+        print(result)
+        return result
+
+    @property
+    def election_result_percentage(self):
+        result = {}
+        all_ballot_question_for_election = self.ballot_questions.all()
+        for ballot_question in all_ballot_question_for_election:
+            result[
+                str(ballot_question.title)
+            ] = ballot_question.votes_analysis_in_percentage
+        print(result)
+        return result
+
+    @property
+    def election_result_degree(self):
+        result = {}
+        all_ballot_question_for_election = self.ballot_questions.all()
+        for ballot_question in all_ballot_question_for_election:
+            result[
+                str(ballot_question.title)
+            ] = ballot_question.votes_analysis_in_degree
+        print(result)
+        return result
+
+    @property
+    def no_of_eligible_voters(self):
+        return self.voters.filter(is_verified=True).count()
+
+    @property
+    def no_of_all_voters(self):
+        return self.voters.all().count()
+
+    @property
+    def no_of_all_voters_that_have_voted(self):
+        totals = self.all_voters_that_have_voted
+        return totals[0]
+
+    @property
+    def all_voters_that_have_voted(self) -> list[int]:
+        totals = []
+        all_ballot_question_for_election = self.ballot_questions.all()
+        for ballot_question in all_ballot_question_for_election:
+            total_voters_for_options = [
+                option.votes_count for option in ballot_question.options.all()
+            ]
+            print(total_voters_for_options)
+            totals.append(sum(total_voters_for_options))
+        return totals
+
 
 class ElectionSetting(models.Model):
     id = models.UUIDField(
@@ -148,6 +206,24 @@ class BallotQuestion(models.Model):
             analysis[str(option.title)] = option.votes_count
         print(analysis)
         return analysis
+
+    @property
+    def votes_analysis_in_percentage(self):
+        total_voters = self.election.no_of_all_voters_that_have_voted
+        analysis_in_percentage = {}
+        analysis = self.votes_analysis
+        for option in analysis:
+            analysis_in_percentage[option] = (analysis[option] / total_voters) * 100
+        return analysis_in_percentage
+
+    @property
+    def votes_analysis_in_degree(self):
+        total_voters = self.election.no_of_all_voters_that_have_voted
+        analysis_in_percentage = {}
+        analysis = self.votes_analysis
+        for option in analysis:
+            analysis_in_percentage[option] = (analysis[option] / total_voters) * 360
+        return analysis_in_percentage
 
 
 class Option(models.Model):
