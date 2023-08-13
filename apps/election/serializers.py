@@ -7,6 +7,7 @@ from .models import (
     ElectionSettingCategory,
     ElectionSettingParameter,
 )
+import secrets
 
 
 class OptionSerializer(serializers.ModelSerializer):
@@ -63,12 +64,16 @@ class ElectionFullDetailSerializer(serializers.ModelSerializer):
             "created_at",
             "last_updated",
             "status",
-            "election_live_url",
-            "election_live_short_url",
-            "election_live_preview_url",
+            "live_code",
+            "preview_code",
             "ballot_questions",
         ]
-        read_only_fields = ["created_by"]
+        read_only_fields = [
+            "created_by",
+            "status",
+            "live_code",
+            "preview_code",
+        ]
 
     def get_ballot_questions(self, obj):
         return BallotQuestionSerializer(obj.ballot_questions.all(), many=True).data
@@ -132,7 +137,36 @@ class ElectionSettingParameterSerializer(serializers.ModelSerializer):
             "category",
             "title",
         ]
-        # extra_kwargs = {
-        #     "pass_key": {"write_only": True, "required": True},
-        #     "pass_name": {"required": True},
-        # }
+
+
+class ElectionLaunchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Election
+        fields = [
+            "live_code",
+            "preview_code",
+        ]
+        read_only_fields = [
+            "live_code",
+            "preview_code",
+        ]
+
+    def save(self, **kwargs):
+        # check no of voters
+        if self.instance.no_of_all_voters == 0:
+            raise serializers.ValidationError(
+                "Cannot launch an election without voters"
+            )
+        # check question and option
+        if self.instance.no_of_all_questions == 0 or (
+            not Option.objects.filter(ballot_question__election=self.instance).exists()
+        ):
+            raise serializers.ValidationError(
+                "Questions and Options are needed to launch an election"
+            )
+        if self.instance.status != "LIVE":
+            # generate codes to be used for url in frontend
+            self.instance.live_code = secrets.token_urlsafe(8)
+            self.instance.status = "LIVE"
+            self.instance.save()
+        return self.instance.refresh_from_db()

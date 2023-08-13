@@ -7,6 +7,7 @@ from .serializers import (
     ElectionResultSerializer,
     ElectionSettingsSerializer,
     ElectionSettingParameterSerializer,
+    ElectionLaunchSerializer,
 )
 from .models import (
     Election,
@@ -318,6 +319,24 @@ class ElectionSettingView(generics.GenericAPIView):
         return Response(data, status.HTTP_200_OK)
 
 
+class ElectionLaunchView(generics.GenericAPIView):
+    serializer_class = ElectionLaunchSerializer
+    permission_classes = [IsOwner]
+
+    def get(self, request, election_id):
+        election = get_object_or_404(Election, id=self.kwargs.get("election_id"))
+        self.check_object_permissions(self.request, election)
+        serializer = self.serializer_class(instance=election)
+        serializer.save()
+        data = serializer.data
+        data = {
+            "status": "success",
+            "message": f"Election {election.title} launched successfully",
+            "data": serializer.data,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+
 ElectionListCreateView = ElectionListCreateView.as_view()
 ElectionRetrieveUpdateDeleteView = ElectionRetrieveUpdateDeleteView.as_view()
 BallotQuestionView = BallotQuestionView.as_view()
@@ -328,3 +347,4 @@ OptionListCreateView = OptionListCreateView.as_view()
 OptionRetrieveUpdateDeleteView = OptionRetrieveUpdateDeleteView.as_view()
 ElectionResultView = ElectionResultView.as_view()
 ElectionSettingView = ElectionSettingView.as_view()
+ElectionLaunchView = ElectionLaunchView.as_view()

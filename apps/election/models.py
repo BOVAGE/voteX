@@ -2,8 +2,13 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 import uuid
+import secrets
 
 User = get_user_model()
+
+# generate preview code
+
+generate_url_code = lambda: secrets.token_urlsafe(8)
 
 
 class StatusChoices(models.TextChoices):
@@ -36,9 +41,10 @@ class Election(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
-    election_live_url = models.CharField(max_length=100, blank=True, null=True)
-    election_live_short_url = models.CharField(max_length=100, blank=True, null=True)
-    election_live_preview_url = models.CharField(max_length=100, blank=True, null=True)
+    live_code = models.CharField(max_length=100, blank=True, null=True, unique=True)
+    preview_code = models.CharField(
+        max_length=100, blank=True, null=True, unique=True, default=generate_url_code
+    )
     status = models.CharField(
         choices=StatusChoices.choices, default=StatusChoices.BUILDING, max_length=50
     )
@@ -97,6 +103,14 @@ class Election(models.Model):
         return self.voters.all().count()
 
     @property
+    def no_of_all_questions(self):
+        return self.ballot_questions.all().count()
+
+    @property
+    def no_of_all_questions(self):
+        return self.ballot_questions.all().count()
+
+    @property
     def no_of_all_voters_that_have_voted(self):
         totals = self.all_voters_that_have_voted
         return 0 if not totals else totals[0]
@@ -112,6 +126,13 @@ class Election(models.Model):
             print(total_voters_for_options)
             totals.append(sum(total_voters_for_options))
         return totals
+
+    def get_mode(self, code):
+        if self.status == StatusChoices.BUILDING and self.preview_code == code:
+            return "PREVIEW"
+        if self.status == StatusChoices.LIVE and self.live_code == code:
+            return "LIVE"
+        return "INVALID"
 
 
 class ElectionSetting(models.Model):
