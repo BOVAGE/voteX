@@ -13,13 +13,6 @@
       "value": true,
       "setting_type": "BOOLEAN",
       "description": ""
-    },
-    {
-      "category": "Voters",
-      "title": "Automatic Voter Login",
-      "value": true,
-      "setting_type": "BOOLEAN",
-      "description": ""
     }
   ],
   "Results": [
