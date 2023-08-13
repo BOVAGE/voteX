@@ -46,6 +46,73 @@ class Election(models.Model):
     def __str__(self):
         return self.title
 
+    @property
+    def election_result(self):
+        result = {}
+        all_ballot_question_for_election = self.ballot_questions.all()
+        for ballot_question in all_ballot_question_for_election:
+            result[str(ballot_question.title)] = ballot_question.votes_analysis
+        print(result)
+        return result
+
+    @property
+    def election_result_percentage(self):
+        result = {}
+        all_ballot_question_for_election = self.ballot_questions.all()
+        for ballot_question in all_ballot_question_for_election:
+            result[
+                str(ballot_question.title)
+            ] = ballot_question.votes_analysis_in_percentage
+        print(result)
+        return result
+
+    @property
+    def election_result_percentage(self):
+        result = {}
+        all_ballot_question_for_election = self.ballot_questions.all()
+        for ballot_question in all_ballot_question_for_election:
+            result[
+                str(ballot_question.title)
+            ] = ballot_question.votes_analysis_in_percentage
+        print(result)
+        return result
+
+    @property
+    def election_result_degree(self):
+        result = {}
+        all_ballot_question_for_election = self.ballot_questions.all()
+        for ballot_question in all_ballot_question_for_election:
+            result[
+                str(ballot_question.title)
+            ] = ballot_question.votes_analysis_in_degree
+        print(result)
+        return result
+
+    @property
+    def no_of_eligible_voters(self):
+        return self.voters.filter(is_verified=True).count()
+
+    @property
+    def no_of_all_voters(self):
+        return self.voters.all().count()
+
+    @property
+    def no_of_all_voters_that_have_voted(self):
+        totals = self.all_voters_that_have_voted
+        return totals[0]
+
+    @property
+    def all_voters_that_have_voted(self) -> list[int]:
+        totals = []
+        all_ballot_question_for_election = self.ballot_questions.all()
+        for ballot_question in all_ballot_question_for_election:
+            total_voters_for_options = [
+                option.votes_count for option in ballot_question.options.all()
+            ]
+            print(total_voters_for_options)
+            totals.append(sum(total_voters_for_options))
+        return totals
+
 
 class ElectionSetting(models.Model):
     id = models.UUIDField(
@@ -71,7 +138,7 @@ class ElectionSettingCategory(models.Model):
         null=False,
         blank=False,
     )
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
 
     class Meta:
         verbose_name_plural = "Election Setting Categories"
@@ -131,8 +198,37 @@ class BallotQuestion(models.Model):
     def __str__(self):
         return self.title
 
+    @property
+    def votes_analysis(self):
+        analysis = {}
+        all_options_for_question = self.options.all().order_by("voters")
+        for option in all_options_for_question:
+            analysis[str(option.title)] = option.votes_count
+        print(analysis)
+        return analysis
+
+    @property
+    def votes_analysis_in_percentage(self):
+        total_voters = self.election.no_of_all_voters_that_have_voted
+        analysis_in_percentage = {}
+        analysis = self.votes_analysis
+        for option in analysis:
+            analysis_in_percentage[option] = (analysis[option] / total_voters) * 100
+        return analysis_in_percentage
+
+    @property
+    def votes_analysis_in_degree(self):
+        total_voters = self.election.no_of_all_voters_that_have_voted
+        analysis_in_percentage = {}
+        analysis = self.votes_analysis
+        for option in analysis:
+            analysis_in_percentage[option] = (analysis[option] / total_voters) * 360
+        return analysis_in_percentage
+
 
 class Option(models.Model):
+    from apps.voting.models import Voter
+
     id = models.UUIDField(
         editable=False,
         db_index=True,
@@ -149,6 +245,7 @@ class Option(models.Model):
     description = models.TextField()
     image = models.ImageField(upload_to="elections/", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    voters = models.ManyToManyField(Voter, related_name="voted_options", blank=True)
 
     class Meta:
         constraints = [
@@ -159,3 +256,20 @@ class Option(models.Model):
 
     def __str__(self):
         return self.title
+
+    @staticmethod
+    def can_vote(voter, ballot_question):
+        ballot_question.refresh_from_db()
+        voter_option_choices = Option.objects.filter(
+            ballot_question=ballot_question, voters=voter
+        )
+        if not voter_option_choices.exists():
+            return True
+        voter_option_choices_count = voter_option_choices.count()
+        if voter_option_choices_count >= ballot_question.validation_choice_max:
+            return False
+        return True
+
+    @property
+    def votes_count(self):
+        return self.voters.count()

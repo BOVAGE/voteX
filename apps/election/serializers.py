@@ -65,3 +65,23 @@ class ElectionFullDetailSerializer(serializers.ModelSerializer):
 
     def get_ballot_questions(self, obj):
         return BallotQuestionSerializer(obj.ballot_questions.all(), many=True).data
+
+
+class ElectionResultSerializer(serializers.ModelSerializer):
+    # ballot_questions = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Election
+        fields = [
+            "title",
+            "election_result",
+            "election_result_percentage",
+            "election_result_degree",
+            "no_of_eligible_voters",
+            "no_of_all_voters",
+            "no_of_all_voters_that_have_voted",
+        ]
+        read_only_fields = ["created_by"]
+
+    # def get_ballot_questions(self, obj):
+    #     return BallotQuestionSerializer(obj.ballot_questions.all(), many=True).data

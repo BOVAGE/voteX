@@ -4,6 +4,7 @@ from .serializers import (
     ElectionFullDetailSerializer,
     OptionSerializer,
     BallotQuestionSerializer,
+    ElectionResultSerializer,
 )
 from .models import Election, BallotQuestion, Option
 from rest_framework.response import Response
@@ -249,6 +250,23 @@ class OptionRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
         return Response(data, status=status.HTTP_204_NO_CONTENT)
 
 
+class ElectionResultView(generics.RetrieveAPIView):
+    serializer_class = ElectionResultSerializer
+    permission_classes = [IsOwnerOrReadOnly]
+    lookup_field = "id"
+    lookup_url_kwarg = "election_id"
+    queryset = Election.objects.all()
+
+    def retrieve(self, request, *args, **kwargs):
+        data = super().retrieve(request, *args, **kwargs).data
+        data = {
+            "status": "success",
+            "message": f"Election result for - {data.get('title')} retrieved successfully",
+            "data": data,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+
 ElectionListCreateView = ElectionListCreateView.as_view()
 ElectionRetrieveUpdateDeleteView = ElectionRetrieveUpdateDeleteView.as_view()
 BallotQuestionView = BallotQuestionView.as_view()
@@ -257,3 +275,4 @@ BallotQuestionRetrieveUpdateDeleteView = (
 )
 OptionListCreateView = OptionListCreateView.as_view()
 OptionRetrieveUpdateDeleteView = OptionRetrieveUpdateDeleteView.as_view()
+ElectionResultView = ElectionResultView.as_view()

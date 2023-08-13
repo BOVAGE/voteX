@@ -40,7 +40,7 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = ["corsheaders", "rest_framework", "rest_framework_simplejwt"]
 
-CUSTOM_APPS = ["apps.accounts", "apps.election"]
+CUSTOM_APPS = ["apps.accounts", "apps.election", "apps.voting", "apps.common"]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + CUSTOM_APPS
 
@@ -148,7 +148,14 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication"
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ]
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
 }
+
+# CELERY CONFIG
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
+
+
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
+VOTER_JWT_SECRET_KEY = os.getenv("VOTER_JWT_SECRET_KEY")
