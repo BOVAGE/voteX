@@ -8,7 +8,9 @@ User = get_user_model()
 
 # generate preview code
 
-generate_url_code = lambda: secrets.token_urlsafe(8)
+
+def generate_url_code():
+    return secrets.token_urlsafe(8)
 
 
 class StatusChoices(models.TextChoices):
