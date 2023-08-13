@@ -156,12 +156,13 @@ class ElectionSettingParameter(models.Model):
         null=False,
         blank=False,
     )
-    election_setting = models.OneToOneField(ElectionSetting, on_delete=models.CASCADE)
+    election_setting = models.ForeignKey(ElectionSetting, on_delete=models.CASCADE)
     setting_type = models.CharField(choices=SettingTypeChoices.choices, max_length=50)
     category = models.ForeignKey(
         ElectionSettingCategory, on_delete=models.SET_NULL, null=True
     )
     title = models.CharField(max_length=50)
+    description = models.CharField(max_length=1000, blank=True)
     value = models.CharField(max_length=100)
 
     def __str__(self) -> str:

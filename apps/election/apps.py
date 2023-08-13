@@ -2,5 +2,10 @@ from django.apps import AppConfig
 
 
 class ElectionConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'apps.election'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "apps.election"
+
+    def ready(self) -> None:
+        from . import signals
+
+        return super().ready()
