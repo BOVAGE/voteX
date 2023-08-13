@@ -8,6 +8,7 @@ from .models import (
     ElectionSettingParameter,
 )
 import secrets
+from apps.common.exceptions import BadRequest
 
 
 class OptionSerializer(serializers.ModelSerializer):
@@ -154,14 +155,12 @@ class ElectionLaunchSerializer(serializers.ModelSerializer):
     def save(self, **kwargs):
         # check no of voters
         if self.instance.no_of_all_voters == 0:
-            raise serializers.ValidationError(
-                "Cannot launch an election without voters"
-            )
+            raise BadRequest("Cannot launch an election without voters")
         # check question and option
         if self.instance.no_of_all_questions == 0 or (
             not Option.objects.filter(ballot_question__election=self.instance).exists()
         ):
-            raise serializers.ValidationError(
+            raise BadRequest(
                 "Questions and Options are needed to launch an election"
             )
         if self.instance.status != "LIVE":
