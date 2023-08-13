@@ -20,6 +20,9 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('email', 'password', 'username', 'user_type', 'matric_no', 'phone_number',)
+        extra_kwargs = {
+            "password": {"write_only": True, "required": True}
+        }
 
     def validate(self, data):
         email = data.get('email')
