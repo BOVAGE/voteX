@@ -84,6 +84,22 @@ class VoterBatchCreateView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save(election=election)
         data = serializer.data
+        for voter in data:
+            voter = Voter.objects.get(id=voter.get("id"))
+            uidb64 = urlsafe_base64_encode(smart_bytes(voter.id))
+            logger.info(f"The uidb64 is {uidb64}")
+            token = VoterTokenGenerator().make_token(voter)
+            verify_link = self.request.build_absolute_uri(
+                reverse_lazy("apps.voting:verify_voter", args=(uidb64,))
+            )
+            verify_link += f"?token={token}"
+            logger.info(f"Sending verification mail to voter with email: {voter.email}")
+            send_email_task.delay(
+                "voting/verify_voter.html",
+                {"election_title": election.title, "link": verify_link},
+                voter.email,
+            )
+            logger.info(f"The verification is {verify_link}")
         data = {
             "status": "success",
             "message": f"{len(data)} voters created successfully",
