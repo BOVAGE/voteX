@@ -170,3 +170,25 @@ class ElectionLaunchSerializer(serializers.ModelSerializer):
             self.instance.status = "LIVE"
             self.instance.save()
         return self.instance.refresh_from_db()
+
+
+class ElectionAllDetailsSerializer(serializers.ModelSerializer):
+    "includes both election full detail (ballot questions + options + election details) and election setting"
+    election = serializers.SerializerMethodField()
+    settings = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Election
+        fields = [
+            "election",
+            "settings",
+        ]
+
+    def get_election(self, obj):
+        return ElectionFullDetailSerializer(obj).data
+
+    def get_settings(self, obj):
+        print(f"{obj.electionsetting.configurations=}")
+        return ElectionSettingParameterSerializer(
+            obj.electionsetting.configurations, many=True
+        ).data

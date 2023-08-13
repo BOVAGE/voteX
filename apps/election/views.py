@@ -8,6 +8,7 @@ from .serializers import (
     ElectionSettingsSerializer,
     ElectionSettingParameterSerializer,
     ElectionLaunchSerializer,
+    ElectionAllDetailsSerializer,
 )
 from .models import (
     Election,
@@ -63,13 +64,18 @@ class ElectionRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     created by the authenticated user
     """
 
-    serializer_class = ElectionFullDetailSerializer
     permission_classes = [IsOwnerOrReadOnly]
     lookup_field = "id"
     lookup_url_kwarg = "election_id"
 
     def get_queryset(self):
         return Election.objects.all()
+
+    def get_serializer_class(self):
+        print(f"{self.request.query_params.get('type')=}")
+        if self.request.query_params.get("type") == "full":
+            return ElectionAllDetailsSerializer
+        return ElectionFullDetailSerializer
 
     def retrieve(self, request, *args, **kwargs):
         data = super().retrieve(request, *args, **kwargs).data
