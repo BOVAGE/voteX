@@ -7,6 +7,7 @@ from .views import (
     OptionRetrieveUpdateDeleteView,
     ElectionRetrieveUpdateDeleteView,
     ElectionResultView,
+    ElectionSettingView
 )
 
 urlpatterns = [
@@ -25,6 +26,11 @@ urlpatterns = [
         "<uuid:election_id>/results",
         ElectionResultView,
         name="election_result",
+    ),
+    path(
+        "<uuid:election_id>/settings",
+        ElectionSettingView,
+        name="election_setting",
     ),
     path(
         "questions/<uuid:question_id>",

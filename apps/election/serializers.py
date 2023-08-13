@@ -1,5 +1,12 @@
 from rest_framework import serializers
-from .models import Election, Option, BallotQuestion
+from .models import (
+    Election,
+    Option,
+    BallotQuestion,
+    ElectionSetting,
+    ElectionSettingCategory,
+    ElectionSettingParameter,
+)
 
 
 class OptionSerializer(serializers.ModelSerializer):
@@ -85,3 +92,33 @@ class ElectionResultSerializer(serializers.ModelSerializer):
 
     # def get_ballot_questions(self, obj):
     #     return BallotQuestionSerializer(obj.ballot_questions.all(), many=True).data
+
+
+class ElectionSettingsSerializer(serializers.ModelSerializer):
+    configurations = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ElectionSetting
+        fields = [
+            "configurations",
+        ]
+
+    def get_configurations(self, obj):
+        print(f"{obj.configurations=}")
+        return ElectionSettingParameterSerializer(obj.configurations, many=True).data
+
+
+class ElectionSettingParameterSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(source="category.name", queryset=ElectionSettingCategory.objects.all())
+
+    class Meta:
+        model = ElectionSettingParameter
+        fields = [
+            "id",
+            "election_setting",
+            "setting_type",
+            "description",
+            "category",
+            "title",
+            "value",
+        ]

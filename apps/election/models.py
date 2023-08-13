@@ -99,7 +99,7 @@ class Election(models.Model):
     @property
     def no_of_all_voters_that_have_voted(self):
         totals = self.all_voters_that_have_voted
-        return totals[0]
+        return 0 if not totals else totals[0]
 
     @property
     def all_voters_that_have_voted(self) -> list[int]:
@@ -127,6 +127,13 @@ class ElectionSetting(models.Model):
 
     def __str__(self):
         return f"{self.election.title} setting"
+
+    @property
+    def configurations(self):
+        return self.election_setting_parameters.all()
+
+    def get_configurations_by(self, category_name):
+        return self.election_setting_parameters.filter(category__name=category_name)
 
 
 class ElectionSettingCategory(models.Model):
@@ -156,7 +163,11 @@ class ElectionSettingParameter(models.Model):
         null=False,
         blank=False,
     )
-    election_setting = models.ForeignKey(ElectionSetting, on_delete=models.CASCADE)
+    election_setting = models.ForeignKey(
+        ElectionSetting,
+        on_delete=models.CASCADE,
+        related_name="election_setting_parameters",
+    )
     setting_type = models.CharField(choices=SettingTypeChoices.choices, max_length=50)
     category = models.ForeignKey(
         ElectionSettingCategory, on_delete=models.SET_NULL, null=True

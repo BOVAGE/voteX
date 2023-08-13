@@ -5,11 +5,13 @@ from .serializers import (
     OptionSerializer,
     BallotQuestionSerializer,
     ElectionResultSerializer,
+    ElectionSettingsSerializer,
+    ElectionSettingParameterSerializer,
 )
-from .models import Election, BallotQuestion, Option
+from .models import Election, BallotQuestion, Option, ElectionSetting
 from rest_framework.response import Response
 from rest_framework import status
-from apps.common.permissions import IsOwnerOrReadOnly
+from apps.common.permissions import IsOwnerOrReadOnly, IsOwner
 from django.shortcuts import get_object_or_404
 
 
@@ -267,6 +269,33 @@ class ElectionResultView(generics.RetrieveAPIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
+class ElectionSettingView(generics.GenericAPIView):
+    serializer_class = ElectionSettingParameterSerializer
+    permission_classes = [IsOwner]
+
+    def get(self, request, election_id):
+        category = request.query_params.get("category", None)
+
+        election_setting = get_object_or_404(ElectionSetting, election__id=election_id)
+        election = election_setting.election
+        print(election)
+        self.check_object_permissions(request, election)
+        if category is not None:
+            serializer = self.serializer_class(
+                instance=election_setting.get_configurations_by(category), many=True
+            )
+        else:
+            serializer = self.serializer_class(
+                instance=election_setting.configurations, many=True
+            )
+        data = {
+            "status": "success",
+            "message": f"Election setting for {election.title} retrieved successfully",
+            "data": serializer.data,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+
 ElectionListCreateView = ElectionListCreateView.as_view()
 ElectionRetrieveUpdateDeleteView = ElectionRetrieveUpdateDeleteView.as_view()
 BallotQuestionView = BallotQuestionView.as_view()
@@ -276,3 +305,4 @@ BallotQuestionRetrieveUpdateDeleteView = (
 OptionListCreateView = OptionListCreateView.as_view()
 OptionRetrieveUpdateDeleteView = OptionRetrieveUpdateDeleteView.as_view()
 ElectionResultView = ElectionResultView.as_view()
+ElectionSettingView = ElectionSettingView.as_view()
