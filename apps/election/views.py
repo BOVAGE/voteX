@@ -8,7 +8,13 @@ from .serializers import (
     ElectionSettingsSerializer,
     ElectionSettingParameterSerializer,
 )
-from .models import Election, BallotQuestion, Option, ElectionSetting
+from .models import (
+    Election,
+    BallotQuestion,
+    Option,
+    ElectionSetting,
+    ElectionSettingParameter,
+)
 from rest_framework.response import Response
 from rest_framework import status
 from apps.common.permissions import IsOwnerOrReadOnly, IsOwner
@@ -294,6 +300,22 @@ class ElectionSettingView(generics.GenericAPIView):
             "data": serializer.data,
         }
         return Response(data, status=status.HTTP_200_OK)
+
+    def patch(self, request, election_id):
+        election_setting = get_object_or_404(ElectionSetting, election__id=election_id)
+        election = election_setting.election
+        print(election)
+        self.check_object_permissions(request, election)
+        instance = ElectionSettingParameter.objects.get(id=request.data.pop("id"))
+        serializer = self.serializer_class(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        data = {
+            "status": "success",
+            "message": "Election setting Updated Successfully",
+            "data": serializer.data,
+        }
+        return Response(data, status.HTTP_200_OK)
 
 
 ElectionListCreateView = ElectionListCreateView.as_view()

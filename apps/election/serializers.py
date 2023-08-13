@@ -109,7 +109,10 @@ class ElectionSettingsSerializer(serializers.ModelSerializer):
 
 
 class ElectionSettingParameterSerializer(serializers.ModelSerializer):
-    category = serializers.PrimaryKeyRelatedField(source="category.name", queryset=ElectionSettingCategory.objects.all())
+    category = serializers.PrimaryKeyRelatedField(
+        source="category.name", read_only=True
+    )
+    # queryset=ElectionSettingCategory.objects.all()
 
     class Meta:
         model = ElectionSettingParameter
@@ -122,3 +125,14 @@ class ElectionSettingParameterSerializer(serializers.ModelSerializer):
             "title",
             "value",
         ]
+        read_only_fields = [
+            "election_setting",
+            "setting_type",
+            "description",
+            "category",
+            "title",
+        ]
+        # extra_kwargs = {
+        #     "pass_key": {"write_only": True, "required": True},
+        #     "pass_name": {"required": True},
+        # }
