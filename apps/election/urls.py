@@ -7,6 +7,9 @@ from .views import (
     OptionRetrieveUpdateDeleteView,
     ElectionRetrieveUpdateDeleteView,
     ElectionResultView,
+    ElectionSettingView,
+    ElectionLaunchView,
+    ElectionByCodeView,
 )
 
 urlpatterns = [
@@ -17,6 +20,11 @@ urlpatterns = [
         name="retrieve_update_destroy_election",
     ),
     path(
+        "<str:election_code>",
+        ElectionByCodeView,
+        name="retrieve_election_by_code",
+    ),
+    path(
         "<uuid:election_id>/questions",
         BallotQuestionView,
         name="list_create_ballot_question",
@@ -25,6 +33,16 @@ urlpatterns = [
         "<uuid:election_id>/results",
         ElectionResultView,
         name="election_result",
+    ),
+    path(
+        "<uuid:election_id>/settings",
+        ElectionSettingView,
+        name="election_setting",
+    ),
+    path(
+        "<uuid:election_id>/launch",
+        ElectionLaunchView,
+        name="election_launch",
     ),
     path(
         "questions/<uuid:question_id>",

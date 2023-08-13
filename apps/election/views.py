@@ -5,12 +5,24 @@ from .serializers import (
     OptionSerializer,
     BallotQuestionSerializer,
     ElectionResultSerializer,
+    ElectionSettingsSerializer,
+    ElectionSettingParameterSerializer,
+    ElectionLaunchSerializer,
+    ElectionAllDetailsSerializer,
 )
-from .models import Election, BallotQuestion, Option
+from .models import (
+    Election,
+    BallotQuestion,
+    Option,
+    ElectionSetting,
+    ElectionSettingParameter,
+)
 from rest_framework.response import Response
 from rest_framework import status
-from apps.common.permissions import IsOwnerOrReadOnly
+from apps.common.permissions import IsOwnerOrReadOnly, IsOwner
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
+from rest_framework.exceptions import NotFound
 
 
 class ElectionListCreateView(generics.ListCreateAPIView):
@@ -52,13 +64,18 @@ class ElectionRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     created by the authenticated user
     """
 
-    serializer_class = ElectionFullDetailSerializer
     permission_classes = [IsOwnerOrReadOnly]
     lookup_field = "id"
     lookup_url_kwarg = "election_id"
 
     def get_queryset(self):
         return Election.objects.all()
+
+    def get_serializer_class(self):
+        print(f"{self.request.query_params.get('type')=}")
+        if self.request.query_params.get("type") == "full":
+            return ElectionAllDetailsSerializer
+        return ElectionFullDetailSerializer
 
     def retrieve(self, request, *args, **kwargs):
         data = super().retrieve(request, *args, **kwargs).data
@@ -267,6 +284,89 @@ class ElectionResultView(generics.RetrieveAPIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
+class ElectionSettingView(generics.GenericAPIView):
+    serializer_class = ElectionSettingParameterSerializer
+    permission_classes = [IsOwner]
+
+    def get(self, request, election_id):
+        category = request.query_params.get("category", None)
+
+        election_setting = get_object_or_404(ElectionSetting, election__id=election_id)
+        election = election_setting.election
+        print(election)
+        self.check_object_permissions(request, election)
+        if category is not None:
+            serializer = self.serializer_class(
+                instance=election_setting.get_configurations_by(category), many=True
+            )
+        else:
+            serializer = self.serializer_class(
+                instance=election_setting.configurations, many=True
+            )
+        data = {
+            "status": "success",
+            "message": f"Election setting for {election.title} retrieved successfully",
+            "data": serializer.data,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    def patch(self, request, election_id):
+        election_setting = get_object_or_404(ElectionSetting, election__id=election_id)
+        election = election_setting.election
+        print(election)
+        self.check_object_permissions(request, election)
+        instance = ElectionSettingParameter.objects.get(id=request.data.pop("id"))
+        serializer = self.serializer_class(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        data = {
+            "status": "success",
+            "message": "Election setting Updated Successfully",
+            "data": serializer.data,
+        }
+        return Response(data, status.HTTP_200_OK)
+
+
+class ElectionLaunchView(generics.GenericAPIView):
+    serializer_class = ElectionLaunchSerializer
+    permission_classes = [IsOwner]
+
+    def get(self, request, election_id):
+        election = get_object_or_404(Election, id=self.kwargs.get("election_id"))
+        self.check_object_permissions(self.request, election)
+        serializer = self.serializer_class(instance=election)
+        serializer.save()
+        data = serializer.data
+        data = {
+            "status": "success",
+            "message": f"Election {election.title} launched successfully",
+            "data": serializer.data,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class ElectionByCodeView(generics.GenericAPIView):
+    serializer_class = ElectionFullDetailSerializer
+    permission_classes = []
+
+    def get(self, request, election_code):
+        election = Election.objects.filter(
+            Q(live_code=election_code) | Q(preview_code=election_code)
+        ).first()
+        if election is None:
+            raise NotFound("Election with this code does not exist")
+        serializer = self.serializer_class(election)
+        data = serializer.data
+        election_mode = election.get_mode(election_code)
+        data.setdefault("mode", election_mode)
+        data = {
+            "status": "success",
+            "message": f"Election {election.title} retrieved successfully",
+            "data": data,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+
 ElectionListCreateView = ElectionListCreateView.as_view()
 ElectionRetrieveUpdateDeleteView = ElectionRetrieveUpdateDeleteView.as_view()
 BallotQuestionView = BallotQuestionView.as_view()
@@ -276,3 +376,6 @@ BallotQuestionRetrieveUpdateDeleteView = (
 OptionListCreateView = OptionListCreateView.as_view()
 OptionRetrieveUpdateDeleteView = OptionRetrieveUpdateDeleteView.as_view()
 ElectionResultView = ElectionResultView.as_view()
+ElectionSettingView = ElectionSettingView.as_view()
+ElectionLaunchView = ElectionLaunchView.as_view()
+ElectionByCodeView = ElectionByCodeView.as_view()

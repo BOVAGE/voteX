@@ -1,0 +1,27 @@
+{
+  "Voters": [
+    {
+      "category": "Voters",
+      "title": "Ballot Receipts",
+      "value": true,
+      "setting_type": "BOOLEAN",
+      "description": ""
+    },
+    {
+      "category": "Voters",
+      "title": "Automatic Voter Login",
+      "value": true,
+      "setting_type": "BOOLEAN",
+      "description": ""
+    }
+  ],
+  "Results": [
+    {
+      "category": "Results",
+      "title": "Election Results Public",
+      "value": true,
+      "setting_type": "BOOLEAN",
+      "description": ""
+    }
+  ]
+}
