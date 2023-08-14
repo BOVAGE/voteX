@@ -4,7 +4,11 @@ from datetime import timedelta
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["localhost", "104.208.66.198"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "votex-backend.eastasia.cloudapp.azure.com",
+    "104.208.66.198",
+]
 
 
 DATABASES = {
