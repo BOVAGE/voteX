@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=Election)
 def handle_election_post_save(sender, instance, created, **kwargs):
     file_path = (
-        f"{os.path.dirname(os.path.abspath(__file__))}\data\default_setting.json"
+        f"{os.path.dirname(os.path.abspath(__file__))}/data/default_setting.json"
     )
     print(file_path)
     if created:

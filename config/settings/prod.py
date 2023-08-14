@@ -1,9 +1,10 @@
 from .base import *
+from datetime import timedelta
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ["104.208.66.198"]
+ALLOWED_HOSTS = ["localhost", "104.208.66.198"]
 
 
 DATABASES = {
@@ -29,3 +30,11 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 
 VOTER_JWT_EXPIRY_IN_SECS = 30 * 60
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=3),
+    "REFRESH_TOKEN_LIFETIME": timedelta(day=1),
+}
+
+# SERVER ERROS
+ADMINS = [("Bovage", "fayemibolu2@gmail.com")]
