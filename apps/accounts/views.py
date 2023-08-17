@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenVerifyView
 from .serializers import UserSerializer, TokenObtainPairSerializer
 from rest_framework.generics import CreateAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -75,3 +75,13 @@ class UserView(APIView):
             "data": data,
         }
         return Response(data, status=status.HTTP_200_OK)
+
+
+class CustomTokenVerifyView(TokenVerifyView):
+    def post(self, request, *args, **kwargs):
+        access_token = request.COOKIES.get("access")
+
+        if access_token:
+            request.data["token"] = access_token
+
+        return super().post(request, *args, **kwargs)
